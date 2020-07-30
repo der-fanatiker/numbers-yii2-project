@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  numbers-new-php-fpm:
+    build:
+      context: ./php-fpm
+    volumes:
+      - ../src:/var/www
+    networks:
+      - internal
+
+  numbers-new-php-cli:
+    build:
+      context: ./php-cli
+    volumes:
+      - ../src:/var/www
+    stdin_open: true
+    tty: true
+    networks:
+      - internal
+
+  numbers-new-nginx:
+    build:
+      context: ./nginx
+    volumes:
+      - ../src:/var/www
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - numbers-new-php-fpm
+    networks:
+      - internal
+
+  numbers-new-database:
+    build:
+      context: ./database
+    environment:
+      - MYSQL_DATABASE=db_numbers
+      - MYSQL_USER=numbesr
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=docker
+    volumes:
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
